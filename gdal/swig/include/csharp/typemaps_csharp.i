@@ -35,6 +35,23 @@
 
 %apply (int) {VSI_RETVAL};
 
+
+%pragma(csharp) imclassimports=%{
+using System;
+using System.Runtime.InteropServices;
+%}
+
+//Into Generated Module Class (for globals, etc.)
+%pragma(csharp) moduleimports=%{
+using System;
+using System.Runtime.InteropServices;
+%}
+
+%typemap(csimports) SWIGTYPE %{
+using System;
+using System.Runtime.InteropServices;
+%}
+
 %fragment("OGRErrMessages","header") %{
 static char const *
 OGRErrMessages( int rc ) {
