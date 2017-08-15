@@ -17,47 +17,25 @@ GDAL_ROOT	=	..\..
 
 !INCLUDE csharp.opt
 
+OUTPUT = bin\native\windows\x86
+!IFDEF WIN64
+OUTPUT = bin\native\windows\x64
+!ENDIF
+
 !IFDEF CSHARP_STATIC_LINKAGE
 GDALLIB	= $(GDAL_ROOT)\gdal.lib
 !ELSE
 GDALLIB	= $(GDAL_ROOT)\gdal_i.lib
 !ENDIF
 
-!IFDEF MONO
-CSC = mcs
-!ELSE
-!IF $(MSVC_VER) >= 1400
-!IFDEF WIN64
-CSC = csc /platform:anycpu
-!ELSE
-CSC = csc /platform:x86
-!ENDIF
-!ELSE
-CSC = csc
-!ENDIF
-!ENDIF
-
-!IFDEF DEBUG
-CSDEBUG = /debug:full
-!ELSE
-CSDEBUG =
-!ENDIF
-
-!IF $(MSVC_VER) >= 1600
-CSC = $(CSC) /define:CLR4
-!ENDIF
-
 OBJ	=	gdal_wrap.obj gdalconst_wrap.obj ogr_wrap.obj osr_wrap.obj
 
-
-all: ogr_dir gdal_dir osr_dir const_dir gdal_csharp samples
+all: ogr_dir gdal_dir osr_dir const_dir gdal_csharp
 
 gdal_csharp:
-    $(CSC) $(CSDEBUG) /target:library /out:osr_csharp.dll osr\*.cs AssemblyInfo.cs
-    $(CSC) $(CSDEBUG) /target:library /out:ogr_csharp.dll /r:osr_csharp.dll ogr\*.cs AssemblyInfo.cs
-    $(CSC) $(CSDEBUG) /target:library /out:gdal_csharp.dll /r:ogr_csharp.dll gdal\*.cs AssemblyInfo.cs
-    $(CSC) $(CSDEBUG) /target:library /out:gdalconst_csharp.dll const\*.cs AssemblyInfo.cs
-    link /dll $(OGR_INCLUDE) $(BASE_INCLUDE) ogr_wrap.obj \
+    dotnet restore
+	dotnet build -c Release
+	link /dll $(OGR_INCLUDE) $(BASE_INCLUDE) ogr_wrap.obj \
 		$(EXTERNAL_LIBS) $(GDALLIB)\
 		 /out:ogr_wrap.dll $(LINKER_FLAGS)
 	if exist ogr_wrap.dll.manifest mt -manifest ogr_wrap.dll.manifest -outputresource:ogr_wrap.dll;2
@@ -73,6 +51,8 @@ gdal_csharp:
 		$(EXTERNAL_LIBS) $(GDALLIB)\
 		 /out:osr_wrap.dll $(LINKER_FLAGS)
 	if exist osr_wrap.dll.manifest mt -manifest osr_wrap.dll.manifest -outputresource:osr_wrap.dll;2
+	-md $(OUTPUT)
+	move *.dll $(OUTPUT)
 
 sign:
     sn -k gdal.snk
@@ -110,52 +90,6 @@ interface:
 	cd ogr
 	$(SWIG) -c++ -csharp -namespace OSGeo.OGR -dllimport ogr_wrap -I../../include/csharp -o ogr_wrap.cpp ../../include/ogr.i	
 	cd ..
-
-samples:
-    $(CSC) $(CSDEBUG) /r:ogr_csharp.dll /r:osr_csharp.dll /out:ogrinfo.exe apps\ogrinfo.cs
-    $(CSC) $(CSDEBUG) /r:ogr_csharp.dll /r:osr_csharp.dll /out:createdata.exe apps\createdata.cs
-    $(CSC) $(CSDEBUG) /r:osr_csharp.dll /out:OSRTransform.exe apps\OSRTransform.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /r:System.Drawing.dll /out:GDALRead.exe apps\GDALRead.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /r:System.Drawing.dll /out:GDALReadDirect.exe apps\GDALReadDirect.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /r:System.Drawing.dll /out:GDALAdjustContrast.exe apps\GDALAdjustContrast.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /r:System.Drawing.dll /out:GDALDatasetRasterIO.exe apps\GDALDatasetRasterIO.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /out:GDALWrite.exe apps\GDALWrite.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /out:GDALDatasetWrite.exe apps\GDALDatasetWrite.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /out:GDALColorTable.exe apps\GDALColorTable.cs
-    $(CSC) $(CSDEBUG) /r:ogr_csharp.dll /out:WKT2WKB.exe apps\WKT2WKB.cs
-    $(CSC) $(CSDEBUG) /r:ogr_csharp.dll /out:OGRGEOS.exe apps\OGRGEOS.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /out:ReadXML.exe apps\ReadXML.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /r:osr_csharp.dll /out:GDALInfo.exe apps\GDALInfo.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /out:GDALOverviews.exe apps\GDALOverviews.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /out:GDALCreateCopy.exe apps\GDALCreateCopy.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /out:GDALGetHistogram.exe apps\GDALGetHistogram.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /out:VSIMem.exe apps\VSIMem.cs
-    $(CSC) $(CSDEBUG) /r:gdal_csharp.dll /r:System.Drawing.dll /out:GDALMemDataset.exe apps\GDALMemDataset.cs
-	$(CSC) $(CSDEBUG) /r:ogr_csharp.dll /r:osr_csharp.dll /out:OGRLayerAlg.exe apps\OGRLayerAlg.cs
-	$(CSC) $(CSDEBUG) /r:ogr_csharp.dll /r:osr_csharp.dll /out:OGRFeatureEdit.exe apps\OGRFeatureEdit.cs
-    
-test:
-!IFDEF MONO
-	mono createdata.exe Data pointlayer
-    mono ogrinfo.exe Data/pointlayer.shp
-    mono OSRTransform.exe
-    mono GDALWrite.exe Data/sample.tif
-    mono GDALDatasetWrite.exe Data/sample1.tif
-	mono GDALCreateCopy.exe Data/sample.tif Data/sample2.tif
-	mono GDALOverviews.exe Data/sample.tif NEAREST 2 4
-	mono GDALInfo.exe Data/sample.tif
-!ELSE
-    createdata.exe Data pointlayer
-    ogrinfo.exe Data/pointlayer.shp
-	OSRTransform.exe
-	GDALWrite.exe Data/sample.tif
-	GDALDatasetWrite.exe Data/sample1.tif
-	GDALCreateCopy.exe Data/sample.tif Data/sample2.tif
-	GDALOverviews.exe Data/sample.tif NEAREST 2 4
-	GDALInfo.exe Data/sample.tif
-	ogrlayeralg.exe Intersection Data/pointlayer.shp pointlayer Data/pointlayer.shp pointlayer Data intersectionresult
-	ogrinfo.exe Data/intersectionresult.shp
-!ENDIF
 	
 clean:	
 	cd gdal
@@ -183,6 +117,8 @@ clean:
 	-del *.exe
 	-del *.manifest
 	-del /q /s Data
+	-del $(OUTPUT)/*.dll
+	rmdir $(OUTPUT)
 	
 install:
     -mkdir $(GDAL_HOME)\csharp

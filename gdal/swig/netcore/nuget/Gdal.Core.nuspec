@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>Gdal.Core</id>
+    <title>Gdal.Core</title>
+    <version>1.0.0</version>
+    <authors>Javier Goday</authors>
+    <owners>Javier Goday</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>dotnet core bindings for gdal library.</description>
+    <copyright></copyright>
+    <licenseUrl>https://github.com/jgoday/gdal/license</licenseUrl>
+    <projectUrl>https://github.com/jgoday/gdal</projectUrl>
+    <iconUrl>https://github.com/jgoday/gdal/icon</iconUrl>
+    <tags>linux,windows,cross-platform,gdal</tags>
+  </metadata>
+  <files>
+    <!-- the platform specific -->
+    <file src="../bin/x64/Release/netstandard2.0/gdalcore.dll" target="lib/netstandard2.0/gdalcore.dll" />
+    <!-- .NET Core -->
+    <file src="../bin/native/windows/x64/gdal_wrap.dll" target="runtimes/win7-x64/native/gdal_wrap.dll" />
+    <file src="../bin/native/windows/x64/gdalconst_wrap.dll" target="runtimes/win7-x64/native/gdalconst_wrap.dll" />
+    <file src="../bin/native/windows/x64/ogr_wrap.dll" target="runtimes/win7-x64/native/ogr_wrap.dll" />
+    <file src="../bin/native/windows/x64/osr_wrap.dll" target="runtimes/win7-x64/native/osr_wrap.dll" />
+<!-- 
+    <file src="output/native/windows/x86/?.dll" target="runtimes/win7-x86/native/?.dll" />
+    <file src="output/native/linux/x64/?.so" target="runtimes/osx/native/?.so" /> -->
+  </files>
+</package>
