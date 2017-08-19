@@ -3,3 +3,4 @@
 *.obj
 *.so
 *~
+gdal/swig/netcore/obj/

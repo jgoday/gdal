@@ -10,7 +10,7 @@ include ../SWIGmake.base
 SWIGARGS = -Wall -I../include -I../include/$(BINDING)
 
 LINK = $(LD_SHARED)
-LINK_EXTRAFLAGS = 
+LINK_EXTRAFLAGS =
 OBJ_EXT = o
 ifeq ($(HAVE_LIBTOOL),yes)
 LINK = $(LD)
@@ -18,11 +18,10 @@ LINK_EXTRAFLAGS = -rpath $(INST_LIB) -no-undefined -version-info $(LIBGDAL_CURRE
 OBJ_EXT = lo
 endif
 
+OUTPUT = runtimes/$(RID)/native
 
 CSHARP_MODULES = libgdalcsharp.$(SO_EXT) libogrcsharp.$(SO_EXT) libgdalconstcsharp.$(SO_EXT) libosrcsharp.$(SO_EXT)
 CSHARP_OBJECTS = const/gdalconst_wrap.$(OBJ_EXT) gdal/gdal_wrap.$(OBJ_EXT) osr/osr_wrap.$(OBJ_EXT) ogr/ogr_wrap.$(OBJ_EXT)
-
-CSC = mcs
 
 clean:
 	-rm -f ${CSHARP_MODULES} *.$(OBJ_EXT) *.config *.dll *.mdb *.exe
@@ -32,12 +31,9 @@ veryclean: clean
 
 generate: interface
 interface:
-	$(SWIG) -$(BINDING) -namespace OSGeo.GDAL -dllimport gdalconst_wrap -o const/gdalconst_wrap.c ../include/gdalconst.i
-	$(SWIG) $(SWIGARGS) $(SWIGDEFINES) -I$(GDAL_ROOT) -c++ -$(BINDING) -namespace OSGeo.GDAL -dllimport gdal_wrap -o gdal/gdal_wrap.cpp ../include/gdal.i
-	$(SWIG) $(SWIGARGS) $(SWIGDEFINES) -I$(GDAL_ROOT) -c++ -$(BINDING) -namespace OSGeo.OSR -dllimport osr_wrap -o osr/osr_wrap.cpp ../include/osr.i
-	$(SWIG) $(SWIGARGS) $(SWIGDEFINES) -I$(GDAL_ROOT) -c++ -$(BINDING) -namespace OSGeo.OGR -dllimport ogr_wrap -o ogr/ogr_wrap.cpp ../include/ogr.i
+	./mkinterface.sh
 
-build: ${CSHARP_OBJECTS} ${CSHARP_MODULES} gdal_csharp samples
+build: ${CSHARP_OBJECTS} ${CSHARP_MODULES} gdal_csharp
 
 sign:
 	sn -k gdal.snk
@@ -47,10 +43,6 @@ install:
 
 $(CSHARP_MODULES): lib%csharp.$(SO_EXT): %_wrap.$(OBJ_EXT)
 	$(LINK) $(LDFLAGS) $(CONFIG_LIBS) $< -o $@ $(LINK_EXTRAFLAGS)
-	rm -rf $*_csharp.dll.config
-	echo "<configuration>" >> $*_csharp.dll.config
-	echo "<dllmap dll=\""$*"_wrap\" target=\""$*csharp"\" />" >> $*_csharp.dll.config
-	echo "</configuration>" >> $*_csharp.dll.config
 
 %.$(OBJ_EXT): %.cpp
 	$(CXX) $(CFLAGS) $(GDAL_INCLUDE) -c $<
@@ -62,36 +54,16 @@ $(CSHARP_MODULES): lib%csharp.$(SO_EXT): %_wrap.$(OBJ_EXT)
 	$(CC) $(CFLAGS) $(GDAL_INCLUDE) -c $<
 
 gdal_csharp:
-	$(CSC) /debug:full /target:library /out:osr_csharp.dll osr/*.cs AssemblyInfo.cs
-	$(CSC) /debug:full /target:library /out:ogr_csharp.dll /r:osr_csharp.dll ogr/*.cs AssemblyInfo.cs
-	$(CSC) /debug:full /target:library /out:gdal_csharp.dll /r:ogr_csharp.dll gdal/*.cs AssemblyInfo.cs
-	$(CSC) /debug:full /target:library /out:gdalconst_csharp.dll const/*.cs AssemblyInfo.cs
+	mkdir -p $(OUTPUT)
+	cp ../../.libs/libgdal.so.20.2.0 $(OUTPUT)
+	cp .libs/lib*.so.20.2.0 $(OUTPUT)
 
-samples:
-	$(CSC) /r:ogr_csharp.dll /r:osr_csharp.dll /out:ogrinfo.exe apps/ogrinfo.cs
-	$(CSC) /r:ogr_csharp.dll /r:osr_csharp.dll /out:createdata.exe apps/createdata.cs
-	$(CSC) /r:osr_csharp.dll /out:OSRTransform.exe apps/OSRTransform.cs
-	$(CSC) /r:gdal_csharp.dll /r:System.Drawing.dll /out:GDALRead.exe apps/GDALRead.cs
-	$(CSC) /r:gdal_csharp.dll /r:System.Drawing.dll /out:GDALReadDirect.exe apps/GDALReadDirect.cs
-	$(CSC) /r:gdal_csharp.dll /r:System.Drawing.dll /out:GDALAdjustContrast.exe apps/GDALAdjustContrast.cs
-	$(CSC) /r:gdal_csharp.dll /r:System.Drawing.dll /out:GDALDatasetRasterIO.exe apps/GDALDatasetRasterIO.cs
-	$(CSC) /r:gdal_csharp.dll /out:GDALWrite.exe apps/GDALWrite.cs
-	$(CSC) /r:gdal_csharp.dll /out:GDALDatasetWrite.exe apps/GDALDatasetWrite.cs
-	$(CSC) /r:gdal_csharp.dll /out:GDALColorTable.exe apps/GDALColorTable.cs
-	$(CSC) /r:ogr_csharp.dll /out:WKT2WKB.exe apps/WKT2WKB.cs
-	$(CSC) /r:ogr_csharp.dll /out:OGRGEOS.exe apps/OGRGEOS.cs
-	$(CSC) /r:gdal_csharp.dll /out:ReadXML.exe apps/ReadXML.cs
-	$(CSC) /r:gdal_csharp.dll /r:osr_csharp.dll /out:GDALInfo.exe apps/GDALInfo.cs
-	$(CSC) /r:gdal_csharp.dll /out:GDALOverviews.exe apps/GDALOverviews.cs
-	$(CSC) /r:gdal_csharp.dll /out:GDALCreateCopy.exe apps/GDALCreateCopy.cs
-	$(CSC) /r:gdal_csharp.dll /out:GDALGetHistogram.exe apps/GDALGetHistogram.cs
+	mv $(OUTPUT)/libgdalcsharp.so.20.2.0 $(OUTPUT)/gdal_wrap.so
+	mv $(OUTPUT)/libogrcsharp.so.20.2.0 $(OUTPUT)/ogr_wrap.so
+	mv $(OUTPUT)/libosrcsharp.so.20.2.0 $(OUTPUT)/osr_wrap.so
+	dotnet restore
+	dotnet build -c Release
 
-test:
-	LC_ALL=C mono createdata.exe Data pointlayer
-	LC_ALL=C mono ogrinfo.exe Data/pointlayer.shp
-	LC_ALL=C mono OSRTransform.exe
-	LC_ALL=C mono GDALWrite.exe Data/sample.tif
-	LC_ALL=C mono GDALDatasetWrite.exe Data/sample1.tif
-	LC_ALL=C mono GDALCreateCopy.exe Data/sample.tif Data/sample2.tif
-	LC_ALL=C mono GDALOverviews.exe Data/sample.tif NEAREST 2 4
-	LC_ALL=C mono GDALInfo.exe Data/sample.tif
+
+pack:
+	dotnet pack -c Release
