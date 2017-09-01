@@ -18,10 +18,10 @@
     <RepositoryUrl>https://github.com/jgoday/gdal/</RepositoryUrl>
     <Version>1.0.0</Version>
     <Description>
-    Gdal bindings for dotnet core.
+    Gdal bindings for dotnet core (http://www.gdal.org/).
     Native binaries available for Windows x64 and Linux x64.
-    Other platforms must compile gdal and swig/netcore manually.
     This package is using 2.3.0-dev Gdal version.
+    Linux runtime has libxml, libpng16 and libjpeg62 dependencies.
     </Description>
   </PropertyGroup>
   <ItemGroup>
@@ -46,11 +46,11 @@
       <Pack>true</Pack>
     </None>
 
-    <None Include="runtimes/linux-x64/native/libgdal.so.20.2.0">
+    <None Include="runtimes/linux-x64/native/libgdal.so.20">
       <PackagePath>runtimes/linux-x64/native/</PackagePath>
       <Pack>true</Pack>
     </None>
-    <None Include="runtimes/linux-x64/native/libgdalconstcsharp.so.20.2.0">
+    <None Include="runtimes/linux-x64/native/gdalconst_wrap.so">
       <PackagePath>runtimes/linux-x64/native/</PackagePath>
       <Pack>true</Pack>
     </None>
